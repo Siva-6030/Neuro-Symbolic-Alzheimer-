@@ -1,0 +1,25 @@
+{
+  "name": "neuro-symbolic-alzheimer",
+  "version": "1.0.0",
+  "description": "Neuro-Symbolic Alzheimer’s Detection Web Application\r Overview",
+  "main": "firebase-login.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Siva-6030/Neuro-Symbolic-Alzheimer-.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Siva-6030/Neuro-Symbolic-Alzheimer-/issues"
+  },
+  "homepage": "https://github.com/Siva-6030/Neuro-Symbolic-Alzheimer-#readme",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "mongoose": "^8.16.4"
+  }
+}
