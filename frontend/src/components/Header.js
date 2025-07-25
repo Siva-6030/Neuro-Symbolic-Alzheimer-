@@ -1,14 +1,23 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { getAuth, signOut } from 'firebase/auth';
+import React, { useContext } from "react";
+import { useNavigate } from "react-router-dom";
+import { getAuth, signOut } from "firebase/auth";
+import { AdminContext } from "../App"; // Adjust path based on your project structure
 
 const Header = () => {
   const navigate = useNavigate();
   const auth = getAuth();
+  const { isAdmin, setIsAdmin } = useContext(AdminContext);
 
   const handleSignOut = async () => {
-    await signOut(auth);
-    navigate('/login');
+    if (isAdmin) {
+      // Admin logout: Clear isAdmin state and localStorage
+      setIsAdmin(false);
+      localStorage.removeItem("isAdmin");
+    } else {
+      // Firebase logout for patient
+      await signOut(auth);
+    }
+    navigate("/login");
   };
 
   return (

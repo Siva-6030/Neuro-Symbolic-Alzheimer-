@@ -20,9 +20,9 @@ const HomePage = () => {
       >
         <div style={{
           background: 'rgba(255,255,255,0.85)',
-          borderRadius: '18px',
-          boxShadow: '0 4px 24px rgba(0,0,0,0.08)',
-          padding: '40px 60px',
+          borderRadius: '25px',
+          boxShadow: '0 6px 30px rgba(0,0,0,0.08)',
+          padding: '80px 100px',
           display: 'flex',
           flexDirection: 'column',
           gap: '25px',
