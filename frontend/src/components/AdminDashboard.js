@@ -18,6 +18,7 @@ const AdminDashboard = () => {
   });
   const [error, setError] = useState("");
   const [showSection, setShowSection] = useState(null); // null, "patients", or "reports"
+  const [selectedReportPatientId, setSelectedReportPatientId] = useState(null); // Track selected patient for reports
 
   useEffect(() => {
     fetchPatients();
@@ -154,7 +155,7 @@ const AdminDashboard = () => {
             Patient Details
           </button>
           <button
-            onClick={() => setShowSection("reports")}
+            onClick={() => { setShowSection("reports"); setSelectedReportPatientId(null); }}
             style={{
               padding: "12px 24px",
               background: showSection === "reports" ? "#5a189a" : "#ddd",
@@ -229,22 +230,56 @@ const AdminDashboard = () => {
         {showSection === "reports" && (
           <div>
             <h3>Patient Reports</h3>
-            {Object.keys(assessments).map((patientId) => (
-              <div key={patientId} style={{ marginBottom: "24px" }}>
-                <h4>Assessments for {patients.find((p) => p.patientId === patientId)?.fullName || patientId}</h4>
-                {assessments[patientId].length > 0 ? (
-                  <ul>
-                    {assessments[patientId].map((assessment, index) => (
-                      <li key={index}>
-                        Date: {new Date(assessment.assessmentDate).toLocaleDateString()}, MMSE: {assessment.mmse}, Risk Score: {assessment.riskScore}
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p>No assessments available</p>
-                )}
+            {selectedReportPatientId === null ? (
+              <div>
+                <h4>Select a Patient</h4>
+                <ul>
+                  {patients.map((patient) => (
+                    <li key={patient.patientId} style={{ cursor: "pointer", padding: "8px", borderBottom: "1px solid #ddd" }} onClick={() => setSelectedReportPatientId(patient.patientId)}>
+                      {patient.fullName}
+                    </li>
+                  ))}
+                </ul>
               </div>
-            ))}
+            ) : (
+              <div>
+                <h4>Report for {patients.find((p) => p.patientId === selectedReportPatientId)?.fullName || selectedReportPatientId}</h4>
+                <button onClick={() => setSelectedReportPatientId(null)} style={{ padding: "8px 16px", background: "#ddd", color: "#444", border: "none", borderRadius: "4px", marginBottom: "12px" }}>Back to Patient List</button>
+                {/* Patient Details */}
+                <div style={{ marginBottom: "24px", padding: "12px", background: "#f9f9f9", borderRadius: "8px" }}>
+                  <h5>Patient Details</h5>
+                  <p><strong>Full Name:</strong> {patients.find((p) => p.patientId === selectedReportPatientId)?.fullName || "N/A"}</p>
+                  <p><strong>Date of Birth:</strong> {patients.find((p) => p.patientId === selectedReportPatientId)?.dob || "N/A"}</p>
+                  <p><strong>Gender:</strong> {patients.find((p) => p.patientId === selectedReportPatientId)?.gender || "N/A"}</p>
+                  <p><strong>Email:</strong> {patients.find((p) => p.patientId === selectedReportPatientId)?.email || "N/A"}</p>
+                  <p><strong>Phone:</strong> {patients.find((p) => p.patientId === selectedReportPatientId)?.phone || "N/A"}</p>
+                  <p><strong>Address:</strong> {patients.find((p) => p.patientId === selectedReportPatientId)?.address || "N/A"}</p>
+                  <p><strong>Guardian Name:</strong> {patients.find((p) => p.patientId === selectedReportPatientId)?.guardianName || "N/A"}</p>
+                  <p><strong>Medical Conditions:</strong> {patients.find((p) => p.patientId === selectedReportPatientId)?.medicalConditions || "N/A"}</p>
+                  <p><strong>Symptoms:</strong> {patients.find((p) => p.patientId === selectedReportPatientId)?.symptoms || "N/A"}</p>
+                </div>
+                {/* MMSE Assessments */}
+                <div style={{ marginBottom: "24px", padding: "12px", background: "#f9f9f9", borderRadius: "8px" }}>
+                  <h5>MMSE Assessments</h5>
+                  {assessments[selectedReportPatientId] && assessments[selectedReportPatientId].length > 0 ? (
+                    <ul>
+                      {assessments[selectedReportPatientId].map((assessment, index) => (
+                        <li key={index}>
+                          Date: {new Date(assessment.assessmentDate).toLocaleDateString()}, MMSE: {assessment.mmse}, Risk Score: {assessment.riskScore}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p>No MMSE assessments available</p>
+                  )}
+                </div>
+                {/* MRI Report (Simulated) */}
+                <div style={{ padding: "12px", background: "#f9f9f9", borderRadius: "8px" }}>
+                  <h5>MRI Report</h5>
+                  <p>This is a simulated MRI report for {patients.find((p) => p.patientId === selectedReportPatientId)?.fullName || selectedReportPatientId}. MRI results indicate: <em>Hippocampal atrophy observed, suggesting possible early Alzheimer's changes. Further evaluation recommended.</em></p>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

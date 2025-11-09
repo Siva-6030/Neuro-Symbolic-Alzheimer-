@@ -738,348 +738,344 @@ select.form-control {
 }
 
 /* END PERPLEXITY DESIGN SYSTEM */
-:root {
-  /* Override/extend design system variables for app-specific needs */
-  --gradient-primary: linear-gradient(135deg, var(--color-primary) 0%, var(--color-teal-400) 100%);
-  --gradient-secondary: linear-gradient(135deg, var(--color-error) 0%, var(--color-red-400) 100%);
-  --gradient-accent: linear-gradient(135deg, var(--color-warning) 0%, var(--color-orange-400) 100%);
-  --gradient-bg: linear-gradient(135deg, var(--color-background) 0%, var(--color-surface) 100%);
-}
-
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-html,
-body,
-#root {
-  height: 100%;
-  width: 100%;
-}
-
-body {
-  font-family: var(--font-family-base);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  color: var(--color-text);
-  background: var(--gradient-bg);
-  font-size: var(--font-size-base);
-  line-height: var(--line-height-normal);
-}
-
 /* ============================================
-   LOADING SCREEN
+   HEADER STYLES
    ============================================ */
 
-.loading-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-  background: var(--gradient-primary);
-  position: fixed;
-  width: 100%;
-  height: 100%;
+.header {
+  background: var(--color-primary);
+  color: var(--color-white);
+  box-shadow: var(--shadow-lg);
+  position: sticky;
   top: 0;
-  left: 0;
-  z-index: 9999;
+  z-index: 100;
+  backdrop-filter: blur(10px);
+  background-attachment: fixed;
 }
 
-.loading-content {
-  text-align: center;
-  animation: fadeIn 0.5s ease-in;
-}
-
-.loading-icon {
-  font-size: 6rem;
-  margin-bottom: var(--space-24);
-  animation: bounce 1s var(--ease-standard) infinite;
-}
-
-.loading-title {
-  font-size: var(--font-size-4xl);
-  font-weight: var(--font-weight-bold);
-  color: var(--color-cream-50);
-  margin-bottom: var(--space-32);
-  letter-spacing: var(--letter-spacing-tight);
-}
-
-.loading-spinner {
-  display: flex;
-  justify-content: center;
-  margin: var(--space-32) 0;
-}
-
-.spinner {
-  width: 50px;
-  height: 50px;
-  border: 4px solid rgba(255, 255, 255, 0.3);
-  border-top-color: var(--color-cream-50);
-  border-radius: var(--radius-full);
-  animation: spin 1s linear infinite;
-}
-
-.loading-text {
-  color: rgba(255, 255, 255, 0.8);
-  font-size: var(--font-size-xl);
-  font-weight: var(--font-weight-medium);
-}
-
-/* ============================================
-   ANIMATIONS
-   ============================================ */
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes bounce {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-20px);
-  }
-}
-
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes slideInLeft {
-  from {
-    opacity: 0;
-    transform: translateX(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
-}
-
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* ============================================
-   UTILITY CLASSES
-   ============================================ */
-
-.container {
+.header-container {
   max-width: var(--container-xl);
   margin: 0 auto;
-  padding: var(--space-24);
+  padding: var(--space-16) var(--space-24);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-32);
 }
 
-.card {
-  background: var(--color-surface);
+/* ============================================
+   BRAND SECTION
+   ============================================ */
+
+.header-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-16);
+  flex: 1;
+  min-width: 0;
+}
+
+.brand-logo {
+  font-size: var(--font-size-4xl);
+  animation: pulse 2s ease-in-out infinite;
+  min-width: 60px;
+  text-align: center;
+}
+
+.brand-info {
+  overflow: hidden;
+}
+
+.brand-title {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-white);
+  margin: 0;
+  line-height: var(--line-height-tight);
+  letter-spacing: var(--letter-spacing-tight);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.brand-subtitle {
+  font-size: var(--font-size-sm);
+  color: rgba(255, 255, 255, 0.85);
+  margin: var(--space-4) 0 0 0;
+  font-weight: var(--font-weight-medium);
+  letter-spacing: 0.3px;
+}
+
+/* ============================================
+   ACTIONS SECTION
+   ============================================ */
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-16);
+  flex-shrink: 0;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  background: rgba(255, 255, 255, 0.15);
+  padding: var(--space-12) var(--space-16);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
-  padding: var(--space-24);
-  transition: all var(--duration-normal) var(--ease-standard);
-  border: 1px solid var(--color-card-border);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-.card:hover {
-  box-shadow: var(--shadow-lg);
-  transform: translateY(-2px);
+.user-avatar {
+  font-size: var(--font-size-xl);
+  min-width: 40px;
+  text-align: center;
 }
 
-.btn {
-  display: inline-flex;
+.user-details {
+  text-align: right;
+}
+
+.user-label {
+  font-size: var(--font-size-xs);
+  color: rgba(255, 255, 255, 0.75);
+  margin: 0;
+  font-weight: var(--font-weight-medium);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.user-role {
+  font-size: var(--font-size-base);
+  color: var(--color-white);
+  margin: 0;
+  font-weight: var(--font-weight-bold);
+}
+
+/* ============================================
+   SIGN OUT BUTTON
+   ============================================ */
+
+.sign-out-button {
+  display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--space-16);
+  gap: var(--space-12);
   padding: var(--space-12) var(--space-24);
+  background: var(--color-white);
+  color: var(--color-primary);
   border: none;
   border-radius: var(--radius-lg);
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-semibold);
   cursor: pointer;
   transition: all var(--duration-normal) var(--ease-standard);
+  box-shadow: var(--shadow-md);
   outline: none;
-  font-family: var(--font-family-base);
 }
 
-.btn:focus-visible {
+.sign-out-button:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+  background: var(--color-gray-200);
+}
+
+.sign-out-button:active {
+  transform: translateY(0);
+}
+
+.sign-out-button:focus-visible {
   outline: none;
   box-shadow: var(--focus-ring);
 }
 
-.btn-primary {
-  background: var(--gradient-primary);
-  color: var(--color-btn-primary-text);
+.button-icon {
+  font-size: var(--font-size-lg);
 }
 
-.btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
-}
-
-.btn-secondary {
-  background: var(--color-secondary);
-  color: var(--color-text);
-}
-
-.btn-secondary:hover {
-  background: var(--color-secondary-hover);
-}
-
-.btn-success {
-  background: var(--color-success);
-  color: var(--color-btn-primary-text);
-}
-
-.btn-danger {
-  background: var(--color-error);
-  color: var(--color-cream-50);
-}
-
-.badge {
-  display: inline-block;
-  padding: var(--space-4) var(--space-12);
-  border-radius: var(--radius-full);
-  font-size: var(--font-size-sm);
+.button-text {
   font-weight: var(--font-weight-semibold);
-}
-
-.badge-success {
-  background: rgba(var(--color-success-rgb), 0.15);
-  color: var(--color-success);
-  border: 1px solid rgba(var(--color-success-rgb), 0.25);
-}
-
-.badge-warning {
-  background: rgba(var(--color-warning-rgb), 0.15);
-  color: var(--color-warning);
-  border: 1px solid rgba(var(--color-warning-rgb), 0.25);
-}
-
-.badge-danger {
-  background: rgba(var(--color-error-rgb), 0.15);
-  color: var(--color-error);
-  border: 1px solid rgba(var(--color-error-rgb), 0.25);
 }
 
 /* ============================================
    RESPONSIVE DESIGN
    ============================================ */
 
-/* Mobile Portrait - 480px breakpoint */
-@media (max-width: 480px) {
-  .loading-icon {
-    font-size: 3rem;
-    margin-bottom: var(--space-16);
+@media (max-width: 1024px) {
+  .header-container {
+    padding: var(--space-12) var(--space-16);
+    gap: var(--space-16);
   }
 
-  .loading-title {
-    font-size: var(--font-size-2xl);
-    margin-bottom: var(--space-24);
+  .brand-title {
+    font-size: var(--font-size-xl);
   }
 
-  .loading-spinner {
-    margin: var(--space-24) 0;
+  .brand-subtitle {
+    font-size: var(--font-size-xs);
   }
 
-  .loading-text {
-    font-size: var(--font-size-base);
-  }
-
-  .container {
-    padding: var(--space-16);
-  }
-
-  .card {
-    padding: var(--space-16);
-    border-radius: var(--radius-base);
-  }
-
-  .btn {
-    padding: var(--space-10) var(--space-16);
-    gap: var(--space-8);
-    font-size: var(--font-size-sm);
+  .brand-logo {
+    font-size: var(--font-size-3xl);
   }
 }
 
 @media (max-width: 768px) {
-  .loading-title {
-    font-size: var(--font-size-3xl);
+  .header-container {
+    flex-wrap: wrap;
+    padding: var(--space-12);
+    gap: var(--space-12);
   }
 
-  .container {
-    padding: var(--space-16);
+  .header-brand {
+    flex: 1 1 100%;
+    min-width: 0;
   }
 
-  .card {
-    padding: var(--space-20);
+  .brand-title {
+    font-size: var(--font-size-lg);
   }
 
-  .btn {
+  .brand-subtitle {
+    font-size: var(--font-size-xs);
+  }
+
+  .brand-logo {
+    font-size: var(--font-size-2xl);
+  }
+
+  .header-actions {
+    flex: 1 1 100%;
+    justify-content: space-between;
+  }
+
+  .user-info {
+    padding: var(--space-8) var(--space-12);
+    gap: var(--space-8);
+  }
+
+  .user-avatar {
+    font-size: var(--font-size-lg);
+    min-width: 35px;
+  }
+
+  .user-label {
+    font-size: var(--font-size-xs);
+  }
+
+  .user-role {
+    font-size: var(--font-size-sm);
+  }
+
+  .sign-out-button {
     padding: var(--space-10) var(--space-20);
+    font-size: var(--font-size-sm);
+  }
+
+  .button-icon {
+    font-size: var(--font-size-base);
   }
 }
 
 @media (max-width: 640px) {
-  .loading-icon {
-    font-size: 4rem;
+  .header-container {
+    padding: var(--space-8);
   }
 
-  .loading-title {
-    font-size: var(--font-size-2xl);
+  .header-brand {
+    gap: var(--space-12);
   }
 
-  .container {
-    padding: var(--space-12);
+  .brand-logo {
+    font-size: var(--font-size-xl);
   }
 
-  .card {
-    padding: var(--space-16);
+  .brand-title {
+    font-size: var(--font-size-base);
+  }
+
+  .brand-subtitle {
+    display: none;
+  }
+
+  .header-actions {
+    flex: 1 1 100%;
+    flex-direction: column;
+  }
+
+  .user-info {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .user-details {
+    text-align: left;
+  }
+
+  .sign-out-button {
+    width: 100%;
+    font-size: var(--font-size-sm);
+  }
+}
+
+@media (max-width: 480px) {
+  .header-container {
+    padding: var(--space-6);
+    gap: var(--space-8);
+  }
+
+  .header-brand {
+    gap: var(--space-8);
+  }
+
+  .brand-logo {
+    font-size: var(--font-size-lg);
+    min-width: 50px;
+  }
+
+  .brand-title {
+    font-size: var(--font-size-sm);
+  }
+
+  .user-info {
+    padding: var(--space-6) var(--space-8);
+    gap: var(--space-6);
+  }
+
+  .user-avatar {
+    font-size: var(--font-size-base);
+    min-width: 30px;
+  }
+
+  .user-label {
+    font-size: 10px;
+  }
+
+  .user-role {
+    font-size: var(--font-size-xs);
+  }
+
+  .sign-out-button {
+    padding: var(--space-8) var(--space-16);
+    font-size: var(--font-size-xs);
+  }
+
+  .button-icon {
+    font-size: var(--font-size-sm);
+  }
+}
+
+/* ============================================
+   ANIMATIONS
+   ============================================ */
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
   }
 }

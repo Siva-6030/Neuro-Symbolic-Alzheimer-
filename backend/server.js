@@ -1,11 +1,14 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
+const multer = require("multer");
+const path = require("path");
 const app = express();
 
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
 // MongoDB connection
 mongoose
@@ -21,27 +24,26 @@ const counterSchema = new mongoose.Schema({
 
 const Counter = mongoose.model("Counter", counterSchema);
 
-// Patient Schema with enhanced validation
+// Patient Schema
 const patientSchema = new mongoose.Schema({
   patientId: { type: String, unique: true, required: true },
   fullName: { type: String, required: true },
-  dob: { type: String, required: true },
+  age: { type: Number, required: true },
   gender: { type: String, required: true, enum: ["Male", "Female", "Other"] },
-  email: {
-    type: String,
-    required: true,
-    match: [/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/, "Please enter a valid email address (e.g., user@example.com)"],
-  },
   phone: {
     type: String,
     required: true,
-    match: [/^\+?\d{1,4}[-.\s]?\d{3}[-.\s]?\d{3}[-.\s]?\d{4}$|^[1-9]\d{9}$/, "Please enter a valid phone number (e.g., +1-123-456-7890 or 1234567890)"],
+    match: [/^[1-9]\d{9}$/, "Please enter a valid phone number (10 digits)"],
   },
   address: { type: String, required: true },
-  guardianName: { type: String, required: true },
-  medicalConditions: { type: String, required: true },
-  symptoms: { type: String, required: true },
-  registrationDate: { type: String, required: true },
+  relativeName: { type: String, required: true },
+  relativeNumber: {
+    type: String,
+    required: true,
+    match: [/^[1-9]\d{9}$/, "Please enter a valid phone number (10 digits)"],
+  },
+  medicalHistory: { type: String, default: "" },
+  registrationDate: { type: Date, default: Date.now },
 });
 
 const Patient = mongoose.model("Patient", patientSchema);
@@ -49,41 +51,53 @@ const Patient = mongoose.model("Patient", patientSchema);
 // MMSE Assessment Schema
 const mmseAssessmentSchema = new mongoose.Schema({
   patientId: { type: String, required: true },
-  gender: { type: Number, required: true },
-  ethnicity: { type: Number, required: true },
-  educationLevel: { type: Number, required: true },
-  familyHistoryAlzheimers: { type: Number, required: true },
-  cardiovascularDisease: { type: Number, required: true },
-  diabetes: { type: Number, required: true },
-  depression: { type: Number, required: true },
-  headInjury: { type: Number, required: true },
-  hypertension: { type: Number, required: true },
-  mmse: { type: Number, required: true },
-  functionalAssessment: { type: Number, required: true },
-  adl: { type: Number, required: true },
-  memoryComplaints: { type: Number, required: true },
-  behavioralProblems: { type: Number, required: true },
-  confusion: { type: Number, required: true },
-  disorientation: { type: Number, required: true },
-  personalityChanges: { type: Number, required: true },
-  difficultyCompletingTasks: { type: Number, required: true },
-  forgetfulness: { type: Number, required: true },
-  diagnosis: { type: Number, required: true },
-  riskScore: { type: Number, required: true },
-  assessmentDate: { type: Date, required: true },
+  mmseScores: {
+    orientation: { type: Number, required: true },
+    memory: { type: Number, required: true },
+    attention: { type: Number, required: true },
+    recall: { type: Number, required: true },
+    language: { type: Number, required: true },
+    visual: { type: Number, required: true },
+  },
+  totalScore: { type: Number, required: true },
+  riskLevel: { type: String, enum: ["Low", "Medium", "High"], required: true },
+  assessmentDate: { type: Date, default: Date.now },
 });
 
 const MMSEAssessment = mongoose.model("MMSEAssessment", mmseAssessmentSchema);
 
-// Generate patient ID in format PID{number}-{name}
+// MRI Scan Schema
+const mriScanSchema = new mongoose.Schema({
+  patientId: { type: String, required: true },
+  mriImage: { type: String, required: true }, // Base64 encoded image
+  uploadDate: { type: Date, default: Date.now },
+  predictedClass: {
+    type: String,
+    enum: [
+      "Non Demented",
+      "Very Mild Dementia",
+      "Mild Dementia",
+      "Moderate Dementia",
+    ],
+    required: true,
+  },
+  confidence: { type: Number, required: true },
+  modelVersion: { type: String, default: "ResNet18+ViT+Neuro-Symbolic" },
+});
+
+const MRIScan = mongoose.model("MRIScan", mriScanSchema);
+
+// Generate patient ID
 const generatePatientId = async (fullName) => {
   const sanitizedName = fullName.replace(/[^a-zA-Z0-9]/g, "").toLowerCase();
+
   try {
     const counter = await Counter.findOneAndUpdate(
       { name: "patientId" },
       { $inc: { sequence: 1 } },
       { upsert: true, new: true, setDefaultsOnInsert: { sequence: 100 } }
     );
+
     return `PID${counter.sequence}-${sanitizedName}`;
   } catch (error) {
     console.error("Error generating patient ID:", error);
@@ -91,100 +105,60 @@ const generatePatientId = async (fullName) => {
   }
 };
 
-// Input validation middleware for patient registration
-const validatePatientData = (req, res, next) => {
-  const { fullName, dob, gender, email, phone, address, guardianName, medicalConditions, symptoms } = req.body;
+// ============ PATIENT ENDPOINTS ============
 
-  // Check required fields
-  if (!fullName || !dob || !gender) {
-    return res.status(400).json({ message: "Full Name, Date of Birth, and Gender are required" });
-  }
-  if (!["Male", "Female", "Other"].includes(gender)) {
-    return res.status(400).json({ message: "Invalid gender value" });
-  }
-
-  // Check all required fields
-  const requiredFields = { email, phone, address, guardianName, medicalConditions, symptoms };
-  const emptyFields = Object.entries(requiredFields)
-    .filter(([key, value]) => !value || value.trim() === "")
-    .map(([key]) => key);
-  if (emptyFields.length > 0) {
-    return res.status(400).json({ message: `Please fill in the following fields: ${emptyFields.join(", ")}` });
-  }
-
-  next();
-};
-
-// Admin check middleware
-const checkAdmin = (req, res, next) => {
-  const isAdmin = req.headers.authorization === "Admin"; // Simplified check; use Firebase token in production
-  if (!isAdmin) {
-    return res.status(403).json({ message: "Admin access required" });
-  }
-  next();
-};
-
-// Register a new patient
-app.post("/api/patients", validatePatientData, async (req, res) => {
+// Add new patient
+app.post("/api/patients", async (req, res) => {
   try {
     const {
       fullName,
-      dob,
+      age,
       gender,
-      email,
       phone,
       address,
-      guardianName,
-      medicalConditions,
-      symptoms,
+      relativeName,
+      relativeNumber,
+      medicalHistory,
     } = req.body;
 
-    // Check for existing patient with same phone and DOB
-    if (phone && dob) {
-      const existingPatient = await Patient.findOne({ phone, dob });
-      if (existingPatient) {
-        return res.status(400).json({ message: "Patient with this Phone Number and Date of Birth is already registered" });
-      }
+    // Validation
+    if (!fullName || !age || !gender || !phone || !address || !relativeName || !relativeNumber) {
+      return res
+        .status(400)
+        .json({ message: "All required fields must be filled" });
     }
 
+    // Generate unique patient ID
     const patientId = await generatePatientId(fullName);
-    const registrationDate = new Date().toISOString().split("T")[0];
 
+    // Create new patient
     const newPatient = new Patient({
       patientId,
       fullName,
-      dob,
+      age,
       gender,
-      email,
       phone,
       address,
-      guardianName,
-      medicalConditions,
-      symptoms,
-      registrationDate,
+      relativeName,
+      relativeNumber,
+      medicalHistory: medicalHistory || "",
     });
 
     await newPatient.save();
+
     res.status(201).json({
-      message: "Patient registered successfully",
-      patientId,
+      message: `Patient details added successfully. Generated Patient ID: ${patientId}`,
       patient: newPatient,
+      patientId,
     });
   } catch (error) {
-    if (error.name === "ValidationError") {
-      return res.status(400).json({ message: error.message });
-    }
-    if (error.code === 11000) {
-      return res.status(400).json({ message: "Patient ID already exists" });
-    }
-    console.error("Error registering patient:", error);
-    res.status(500).json({ message: "Error registering patient", error: error.message });
+    console.error("Error adding patient:", error);
+    res.status(500).json({ message: "Error adding patient", error: error.message });
   }
 });
 
 // Get all patients
 app.get("/api/patients", async (req, res) => {
-  console.log("GET /api/patients endpoint hit");
   try {
     const patients = await Patient.find().sort({ registrationDate: -1 });
     res.status(200).json(patients);
@@ -194,7 +168,7 @@ app.get("/api/patients", async (req, res) => {
   }
 });
 
-// Get a single patient by patientId
+// Get patient by ID
 app.get("/api/patients/:patientId", async (req, res) => {
   try {
     const patient = await Patient.findOne({ patientId: req.params.patientId });
@@ -208,71 +182,47 @@ app.get("/api/patients/:patientId", async (req, res) => {
   }
 });
 
-// Update patient details (Admin only)
-app.put("/api/patients/:patientId", checkAdmin, validatePatientData, async (req, res) => {
+// Update patient
+app.put("/api/patients/:patientId", async (req, res) => {
   try {
-    const {
-      fullName,
-      dob,
-      gender,
-      email,
-      phone,
-      address,
-      guardianName,
-      medicalConditions,
-      symptoms,
-    } = req.body;
-
-    // Check for existing patient with same phone and DOB (excluding current patient)
-    if (phone && dob) {
-      const existingPatient = await Patient.findOne({ phone, dob, patientId: { $ne: req.params.patientId } });
-      if (existingPatient) {
-        return res.status(400).json({ message: "Another patient with this Phone Number and Date of Birth is already registered" });
-      }
-    }
-
-    const patient = await Patient.findOneAndUpdate(
+    const updatedPatient = await Patient.findOneAndUpdate(
       { patientId: req.params.patientId },
-      {
-        fullName,
-        dob,
-        gender,
-        email,
-        phone,
-        address,
-        guardianName,
-        medicalConditions,
-        symptoms,
-      },
+      req.body,
       { new: true, runValidators: true }
     );
 
-    if (!patient) {
+    if (!updatedPatient) {
       return res.status(404).json({ message: "Patient not found" });
     }
 
     res.status(200).json({
-      message: "Patient updated successfully",
-      patient,
+      message: "Patient details updated successfully",
+      patient: updatedPatient,
     });
   } catch (error) {
-    if (error.name === "ValidationError") {
-      return res.status(400).json({ message: error.message });
-    }
     console.error("Error updating patient:", error);
     res.status(500).json({ message: "Error updating patient", error: error.message });
   }
 });
 
-// Delete a patient
+// Delete patient
 app.delete("/api/patients/:patientId", async (req, res) => {
   try {
-    const patient = await Patient.findOneAndDelete({ patientId: req.params.patientId });
+    const patient = await Patient.findOneAndDelete({
+      patientId: req.params.patientId,
+    });
+
     if (!patient) {
       return res.status(404).json({ message: "Patient not found" });
     }
+
+    // Delete associated MMSE assessments and MRI scans
     await MMSEAssessment.deleteMany({ patientId: req.params.patientId });
-    res.status(200).json({ message: "Patient and associated assessments deleted successfully" });
+    await MRIScan.deleteMany({ patientId: req.params.patientId });
+
+    res.status(200).json({
+      message: "Patient and associated records deleted successfully",
+    });
   } catch (error) {
     console.error("Error deleting patient:", error);
     res.status(500).json({ message: "Error deleting patient", error: error.message });
@@ -286,6 +236,7 @@ app.get("/api/validate-patient/:patientId", async (req, res) => {
     if (!patient) {
       return res.status(404).json({ message: "Invalid Patient ID" });
     }
+
     res.status(200).json({ patientId: patient.patientId, fullName: patient.fullName });
   } catch (error) {
     console.error("Error validating patient ID:", error);
@@ -293,18 +244,30 @@ app.get("/api/validate-patient/:patientId", async (req, res) => {
   }
 });
 
-// Store MMSE assessment
+// ============ MMSE ENDPOINTS ============
+
+// Save MMSE assessment
 app.post("/api/mmse-assessments", async (req, res) => {
   try {
-    const patient = await Patient.findOne({ patientId: req.body.patientId });
+    const { patientId, mmseScores, totalScore, riskLevel } = req.body;
+
+    // Validate patient exists
+    const patient = await Patient.findOne({ patientId });
     if (!patient) {
       return res.status(404).json({ message: "Invalid Patient ID" });
     }
 
-    const newAssessment = new MMSEAssessment(req.body);
+    const newAssessment = new MMSEAssessment({
+      patientId,
+      mmseScores,
+      totalScore,
+      riskLevel,
+    });
+
     await newAssessment.save();
+
     res.status(201).json({
-      message: "MMSE assessment saved successfully",
+      message: `MMSE test result saved successfully for Patient ID: ${patientId}`,
       assessment: newAssessment,
     });
   } catch (error) {
@@ -316,31 +279,94 @@ app.post("/api/mmse-assessments", async (req, res) => {
 // Get all MMSE assessments for a patient
 app.get("/api/mmse-assessments/:patientId", async (req, res) => {
   try {
-    const assessments = await MMSEAssessment.find({ patientId: req.params.patientId }).sort({ assessmentDate: -1 });
-    if (!assessments || assessments.length === 0) {
-      return res.status(404).json({ message: "No assessments found for this patient" });
-    }
+    const assessments = await MMSEAssessment.find({
+      patientId: req.params.patientId,
+    }).sort({ assessmentDate: -1 });
+
     res.status(200).json(assessments);
   } catch (error) {
     console.error("Error fetching MMSE assessments:", error);
     res.status(500).json({ message: "Error fetching MMSE assessments", error: error.message });
   }
 });
-app.delete("/api/patients/:patientId", async (req, res) => {
+
+// ============ MRI ENDPOINTS ============
+
+// Upload MRI scan
+app.post("/api/mri-scans", async (req, res) => {
   try {
-    const patient = await Patient.findOneAndDelete({ patientId: req.params.patientId });
+    const { patientId, mriImage, predictedClass, confidence } = req.body;
+
+    // Validate patient exists
+    const patient = await Patient.findOne({ patientId });
     if (!patient) {
-      return res.status(404).json({ message: "Patient not found" });
+      return res.status(404).json({ message: "Invalid Patient ID" });
     }
-    await MMSEAssessment.deleteMany({ patientId: req.params.patientId });
-    res.status(200).json({ message: "Patient and associated assessments deleted successfully" });
+
+    const newMRIScan = new MRIScan({
+      patientId,
+      mriImage,
+      predictedClass,
+      confidence,
+    });
+
+    await newMRIScan.save();
+
+    res.status(201).json({
+      message: `MRI Scan uploaded successfully. Detected class: ${predictedClass}.`,
+      mriScan: newMRIScan,
+    });
   } catch (error) {
-    console.error("Error deleting patient:", error);
-    res.status(500).json({ message: "Error deleting patient", error: error.message });
+    console.error("Error uploading MRI scan:", error);
+    res.status(500).json({ message: "Error uploading MRI scan", error: error.message });
   }
 });
 
-// Error handling for invalid routes
+// Get all MRI scans for a patient
+app.get("/api/mri-scans/:patientId", async (req, res) => {
+  try {
+    const scans = await MRIScan.find({
+      patientId: req.params.patientId,
+    }).sort({ uploadDate: -1 });
+
+    res.status(200).json(scans);
+  } catch (error) {
+    console.error("Error fetching MRI scans:", error);
+    res.status(500).json({ message: "Error fetching MRI scans", error: error.message });
+  }
+});
+
+// ============ REPORT ENDPOINTS ============
+
+// Get complete patient report
+app.get("/api/patient-report/:patientId", async (req, res) => {
+  try {
+    const patient = await Patient.findOne({ patientId: req.params.patientId });
+
+    if (!patient) {
+      return res.status(404).json({ message: "Patient not found" });
+    }
+
+    const mmseAssessments = await MMSEAssessment.find({
+      patientId: req.params.patientId,
+    }).sort({ assessmentDate: -1 });
+
+    const mriScans = await MRIScan.find({
+      patientId: req.params.patientId,
+    }).sort({ uploadDate: -1 });
+
+    res.status(200).json({
+      patient,
+      mmseAssessments,
+      mriScans,
+    });
+  } catch (error) {
+    console.error("Error fetching patient report:", error);
+    res.status(500).json({ message: "Error fetching patient report", error: error.message });
+  }
+});
+
+// Error handling
 app.use((req, res) => {
   res.status(404).json({ message: "Route not found" });
 });

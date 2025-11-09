@@ -1,15 +1,11 @@
 import React, { useEffect, useState, createContext } from "react";
 import { BrowserRouter as Router, Route, Routes, Navigate } from "react-router-dom";
 import Login from "./components/Login";
-import HomePage from "./components/HomePage";
-import MRIForm from "./components/MRIForm";
-import MMSEForm from "./components/MMSEForm";
-import ExistingPatientForm from "./components/ExistingPatientForm";
-import NewPatientForm from "./components/NewPatientForm";
+import Dashboard from "./components/Dashboard";
 import Header from "./components/Header";
-import AdminDashboard from "./components/AdminDashboard";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { initializeApp } from "firebase/app";
+import "./App.css";
 
 // Create AdminContext
 export const AdminContext = createContext();
@@ -21,7 +17,7 @@ const firebaseConfig = {
   storageBucket: "neuro-symbolic-alzheimer.firebasestorage.app",
   messagingSenderId: "92838539512",
   appId: "1:92838539512:web:efb0d907d076fa5520cb0d",
-  measurementId: "G-C5Y0LE7DPP"
+  measurementId: "G-C5Y0LE7DPP",
 };
 
 const app = initializeApp(firebaseConfig);
@@ -33,13 +29,16 @@ function App() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Check Firebase authentication for patient login
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setIsLoggedIn(!!user);
       setLoading(false);
     });
+
     // Check if Admin was logged in via localStorage
     const storedAdmin = localStorage.getItem("isAdmin");
     if (storedAdmin === "true") setIsAdmin(true);
+
     return () => unsubscribe();
   }, []);
 
@@ -48,90 +47,76 @@ function App() {
     localStorage.setItem("isAdmin", "true");
   };
 
-  if (loading) return <div>Loading...</div>;
+  // Loading screen while checking authentication
+  if (loading) {
+    return (
+      <div className="loading-container">
+        <div className="loading-content">
+          <div className="loading-icon">🧠</div>
+          <h1 className="loading-title">Alzheimer's Detection System</h1>
+          <div className="loading-spinner">
+            <div className="spinner"></div>
+          </div>
+          <p className="loading-text">Initializing system...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <AdminContext.Provider value={{ isAdmin, setIsAdmin }}>
       <Router>
         <Routes>
+          {/* Login Route */}
+          <Route
+            path="/login"
+            element={
+              !isLoggedIn && !isAdmin ? (
+                <Login onAdminLogin={handleAdminLogin} />
+              ) : (
+                <Navigate to="/dashboard" replace />
+              )
+            }
+          />
+
+          {/* Dashboard Route - Main unified dashboard for all users */}
+          <Route
+            path="/dashboard"
+            element={
+              isLoggedIn || isAdmin ? (
+                <>
+                  <Header />
+                  <Dashboard />
+                </>
+              ) : (
+                <Navigate to="/login" replace />
+              )
+            }
+          />
+
+          {/* Root redirect */}
           <Route
             path="/"
-            element={!isLoggedIn && !isAdmin ? <Login onAdminLogin={handleAdminLogin} /> : <Navigate to={isAdmin ? "/admin" : "/home"} />}
+            element={
+              isLoggedIn || isAdmin ? (
+                <Navigate to="/dashboard" replace />
+              ) : (
+                <Navigate to="/login" replace />
+              )
+            }
           />
-          <Route path="/login" element={!isLoggedIn && !isAdmin ? <Login onAdminLogin={handleAdminLogin} /> : <Navigate to={isAdmin ? "/admin" : "/home"} />} />
+
+          {/* Catch all */}
           <Route
-            path="/home"
-            element={isLoggedIn ? (
-              <>
-                <Header />
-                <div style={{ height: 56 }} />
-                <HomePage />
-              </>
-            ) : (
-              <Navigate to="/login" />
-            )}
+            path="*"
+            element={
+              isLoggedIn || isAdmin ? (
+                <Navigate to="/dashboard" replace />
+              ) : (
+                <Navigate to="/login" replace />
+              )
+            }
           />
-          <Route
-            path="/mri"
-            element={isLoggedIn ? (
-              <>
-                <Header />
-                <div style={{ height: 56 }} />
-                <MRIForm />
-              </>
-            ) : (
-              <Navigate to="/login" />
-            )}
-          />
-          <Route
-            path="/mmse"
-            element={isLoggedIn ? (
-              <>
-                <Header />
-                <div style={{ height: 56 }} />
-                <MMSEForm />
-              </>
-            ) : (
-              <Navigate to="/login" />
-            )}
-          />
-          <Route
-            path="/existing-patient"
-            element={isLoggedIn ? (
-              <>
-                <Header />
-                <div style={{ height: 56 }} />
-                <ExistingPatientForm />
-              </>
-            ) : (
-              <Navigate to="/login" />
-            )}
-          />
-          <Route
-            path="/new-patient"
-            element={isLoggedIn ? (
-              <>
-                <Header />
-                <div style={{ height: 56 }} />
-                <NewPatientForm />
-              </>
-            ) : (
-              <Navigate to="/login" />
-            )}
-          />
-          <Route
-            path="/admin"
-            element={isAdmin ? (
-              <>
-                <Header />
-                <div style={{ height: 56 }} />
-                <AdminDashboard />
-              </>
-            ) : (
-              <Navigate to="/login" />
-            )}
-          />
-          <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </Router>
     </AdminContext.Provider>
