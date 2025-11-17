@@ -66,7 +66,7 @@ const Login = ({ onAdminLogin }) => {
 
           {!loginType ? (
             <div className="login-type-selection">
-              <p className="selection-title">Select Login Type</p>
+              <p className="selection-title">Click Login Button</p>
               
               <button
                 onClick={() => setLoginType("patient")}
@@ -77,14 +77,7 @@ const Login = ({ onAdminLogin }) => {
                 <span className="btn-arrow">→</span>
               </button>
 
-              <button
-                onClick={() => setLoginType("admin")}
-                className="login-type-btn admin-btn"
-              >
-                <span className="btn-icon">👨‍💼</span>
-                <span className="btn-text">Admin Login</span>
-                <span className="btn-arrow">→</span>
-              </button>
+              
 
               <div className="login-info">
                 <p className="info-text">
